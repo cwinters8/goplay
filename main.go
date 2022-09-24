@@ -2,21 +2,36 @@ package main
 
 import (
 	"fmt"
+
+	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/template/html"
 )
 
+// may need to wrap html with template.HTML() when sent to vue to replace the existing contents of an element
+func setup() error {
+	app := fiber.New(fiber.Config{
+		Views: html.New("templates", ".html"),
+	})
+
+	// initially rendered html
+	app.Get("/", func(c *fiber.Ctx) error {
+		return c.Render("index", fiber.Map{
+			// could pass an initial list of animals here
+		})
+	})
+
+	// send an updated list of animals in HTML format, then petite vue will update the contents of an HTML element
+	app.Get("/animals", func(c *fiber.Ctx) error {
+		return c.Render("animals", fiber.Map{
+			"Animals": []string{"Percy", "Friday", "Shorty", "Frost"},
+		})
+	})
+
+	return app.Listen(":3000")
+}
+
 func main() {
-	arg := []byte{1, 2, 3, 4, 5, 6, 7}
-	arg2 := []byte{8, 9, 1}
-
-	buf := make([]byte, 32)
-	buf[0] = 0x01
-	buf[1] = 0x02
-	copy(buf[2:9], arg)
-	copy(buf[9:12], arg2)
-
-	for i := 12; i < 32; i++ {
-		buf[i] = 0x20
+	if err := setup(); err != nil {
+		fmt.Println("failed to setup app: %w", err)
 	}
-
-	fmt.Println(buf)
 }
